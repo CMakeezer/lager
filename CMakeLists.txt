@@ -13,9 +13,9 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Qunused-arguments")
 endif()
 
-option(lager_BUILD_DEBUGGER "Build the time-traveling debugger" ON)
-option(lager_BUILD_TESTS "Build tests" ON)
-option(lager_BUILD_EXAMPLES "Build examples" ON)
+option(BUILD_DEBUGGER "Build the time-traveling debugger" ON)
+option(BUILD_TESTS "Build tests" ON)
+option(BUILD_EXAMPLES "Build examples" ON)
 
 #  Targets
 #  =======
@@ -30,23 +30,23 @@ target_include_directories(lager INTERFACE
 install(TARGETS lager EXPORT LagerConfig)
 
 # the library, with http debugger
-if(lager_BUILD_DEBUGGER)
-  find_package(Boost 1.56 COMPONENTS system REQUIRED)
+if(BUILD_DEBUGGER)
+  find_package(Boost COMPONENTS system REQUIRED)
   find_package(Threads REQUIRED)
   find_package(Immer REQUIRED)
-  find_package(LibHttpServer REQUIRED)
+  find_package(LibHttpServer)
   add_library(lager-debugger INTERFACE)
   target_include_directories(lager-debugger INTERFACE
     $<BUILD_INTERFACE:${lager_BINARY_DIR}/>
     $<BUILD_INTERFACE:${lager_SOURCE_DIR}/>
     $<INSTALL_INTERFACE:include>
-    ${Boost_INCLUDE_DIR}
+    #${Boost_INCLUDE_DIR}
     ${LIBHTTPSERVER_INCLUDE_DIRS})
   target_link_libraries(lager-debugger INTERFACE
     lager
     immer
     ${CMAKE_THREAD_LIBS_INIT}
-    ${Boost_LIBRARIES}
+    Boost::boost
     ${LIBHTTPSERVER_LIBRARIES})
 
   add_custom_target(gui ALL
@@ -64,7 +64,7 @@ if(lager_BUILD_DEBUGGER)
 endif()
 
 # the library, local development target
-if(lager_BUILD_TESTS)
+if(BUILD_TESTS)
   add_library(lager-dev INTERFACE)
   target_include_directories(lager-dev SYSTEM INTERFACE
     "$<BUILD_INTERFACE:${lager_SOURCE_DIR}/>/tools/include")
@@ -79,12 +79,11 @@ if(lager_BUILD_TESTS)
     COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Build and run all the tests and examples.")
-    
   add_subdirectory(test)
 endif()
 
-if(lager_BUILD_EXAMPLES)
-  if(NOT lager_BUILD_DEBUGGER)
+if(BUILD_EXAMPLES)
+  if(NOT BUILD_DEBUGGER)
     message(FATAL_ERROR "Examples require the debugger")
   endif()
   add_subdirectory(example)

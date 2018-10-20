@@ -1,7 +1,6 @@
 
 #  Utils
 #  =====
-
 function(lager_target_name_for out_target out_file file)
   get_filename_component(_extension ${_file} EXT)
 
